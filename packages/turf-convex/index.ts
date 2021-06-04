@@ -50,8 +50,10 @@ export default function convex<P = Properties>(
   const points: number[][] = [];
 
   // Convert all points to flat 2D coordinate Array
+  // Hack: use third element of the coord as index of the array
+  let index = 0;
   coordEach(geojson, (coord) => {
-    points.push([coord[0], coord[1]]);
+    points.push([coord[0], coord[1], index++]);
   });
   if (!points.length) {
     return null;
@@ -61,7 +63,18 @@ export default function convex<P = Properties>(
 
   // Convex hull should have at least 3 different vertices in order to create a valid polygon
   if (convexHull.length > 3) {
-    return polygon([convexHull]);
+    // Indices on the original line that intersect with the output convex hull
+    const intersectIndices = convexHull.map((point) => point[2]);
+    const coords = convexHull.map((point) => [point[0], point[1]]);
+
+    const result = polygon<any>([coords]);
+    result.properties = {
+      ...result.properties,
+      intersectIndices,
+    };
+
+    return result;
   }
+
   return null;
 }

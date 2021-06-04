@@ -61,7 +61,14 @@ function simplifyRadialDist(points, sqTolerance) {
   return newPoints;
 }
 
-function simplifyDPStep(points, first, last, sqTolerance, simplified) {
+function simplifyDPStep(
+  points,
+  first,
+  last,
+  sqTolerance,
+  simplified,
+  intersectIndices
+) {
   var maxSqDist = sqTolerance,
     index;
 
@@ -76,32 +83,54 @@ function simplifyDPStep(points, first, last, sqTolerance, simplified) {
 
   if (maxSqDist > sqTolerance) {
     if (index - first > 1)
-      simplifyDPStep(points, first, index, sqTolerance, simplified);
+      simplifyDPStep(
+        points,
+        first,
+        index,
+        sqTolerance,
+        simplified,
+        intersectIndices
+      );
     simplified.push(points[index]);
+    if (intersectIndices != null) intersectIndices.push(index);
     if (last - index > 1)
-      simplifyDPStep(points, index, last, sqTolerance, simplified);
+      simplifyDPStep(
+        points,
+        index,
+        last,
+        sqTolerance,
+        simplified,
+        intersectIndices
+      );
   }
 }
 
 // simplification using Ramer-Douglas-Peucker algorithm
-function simplifyDouglasPeucker(points, sqTolerance) {
+function simplifyDouglasPeucker(points, sqTolerance, intersectIndices) {
   var last = points.length - 1;
 
   var simplified = [points[0]];
-  simplifyDPStep(points, 0, last, sqTolerance, simplified);
+  if (intersectIndices != null) intersectIndices.push(0);
+  simplifyDPStep(points, 0, last, sqTolerance, simplified, intersectIndices);
+  if (intersectIndices != null) intersectIndices.push(last);
   simplified.push(points[last]);
 
   return simplified;
 }
 
 // both algorithms combined for awesome performance
-export default function simplify(points, tolerance, highestQuality) {
+export default function simplify(
+  points,
+  tolerance,
+  highestQuality,
+  intersectIndices
+) {
   if (points.length <= 2) return points;
 
   var sqTolerance = tolerance !== undefined ? tolerance * tolerance : 1;
 
   points = highestQuality ? points : simplifyRadialDist(points, sqTolerance);
-  points = simplifyDouglasPeucker(points, sqTolerance);
+  points = simplifyDouglasPeucker(points, sqTolerance, intersectIndices);
 
   return points;
 }

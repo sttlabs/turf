@@ -27,15 +27,27 @@ test("simplify", (t) => {
     tolerance = tolerance || 0.01;
     highQuality = highQuality || false;
 
-    const simplified = truncate(
-      simplify(geojson, {
-        tolerance: tolerance,
-        highQuality: highQuality,
-      })
-    );
+    const simple = simplify(geojson, {
+      tolerance: tolerance,
+      highQuality: highQuality,
+    });
 
     if (process.env.REGEN) write.sync(directories.out + filename, simplified);
-    t.deepEqual(simplified, load.sync(directories.out + filename), name);
+    const expected = load.sync(directories.out + filename);
+
+    // remove intersectIndices from properties
+    delete simple.properties.intersectIndices;
+    if (
+      expected.properties == null &&
+      simple.properties &&
+      Object.keys(simple.properties).length === 0 &&
+      simple.properties.constructor === Object
+    ) {
+      delete simple.properties;
+    }
+    const simplified = truncate(simple);
+
+    t.deepEqual(simplified, expected, name);
   }
 
   t.end();
@@ -76,6 +88,8 @@ test("simplify -- removes ID & BBox from properties", (t) => {
     { bbox, id }
   );
   const simple = simplify(poly, { tolerance: 0.1 });
+  // remove intersectIndices from properties
+  delete simple.properties.intersectIndices;
 
   t.equal(simple.id, id);
   t.deepEqual(simple.bbox, bbox);

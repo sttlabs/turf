@@ -207,7 +207,7 @@
     },
     {
       "type": "Feature",
-      "properties": {},
+      "properties": { "intersectIndices": [5, 4, 12, 1, 3, 11, 6, 10, 5] },
       "geometry": {
         "type": "Polygon",
         "coordinates": [

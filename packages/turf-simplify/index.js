@@ -58,9 +58,17 @@ function simplify(geojson, options) {
   // Clone geojson to avoid side effects
   if (mutate !== true) geojson = clone(geojson);
 
+  // Hack: Store the intersect indices of the original line with the simplified line
+  // Then set it as a properties on the output simplified line for functionality need
+  const intersectIndices = [];
   geomEach(geojson, function (geom) {
-    simplifyGeom(geom, tolerance, highQuality);
+    simplifyGeom(geom, tolerance, highQuality, intersectIndices);
   });
+  geojson.properties = {
+    ...geojson.properties,
+    intersectIndices,
+  };
+
   return geojson;
 }
 
@@ -73,7 +81,7 @@ function simplify(geojson, options) {
  * @param {boolean} [highQuality=false] whether or not to spend more time to create a higher-quality simplification with a different algorithm
  * @returns {Geometry} output
  */
-function simplifyGeom(geometry, tolerance, highQuality) {
+function simplifyGeom(geometry, tolerance, highQuality, intersectIndices) {
   var type = geometry.type;
 
   // "unsimplyfiable" geometry types
@@ -88,24 +96,26 @@ function simplifyGeom(geometry, tolerance, highQuality) {
       geometry["coordinates"] = simplifyLine(
         coordinates,
         tolerance,
-        highQuality
+        highQuality,
+        intersectIndices
       );
       break;
     case "MultiLineString":
       geometry["coordinates"] = coordinates.map(function (lines) {
-        return simplifyLine(lines, tolerance, highQuality);
+        return simplifyLine(lines, tolerance, highQuality, intersectIndices);
       });
       break;
     case "Polygon":
       geometry["coordinates"] = simplifyPolygon(
         coordinates,
         tolerance,
-        highQuality
+        highQuality,
+        intersectIndices
       );
       break;
     case "MultiPolygon":
       geometry["coordinates"] = coordinates.map(function (rings) {
-        return simplifyPolygon(rings, tolerance, highQuality);
+        return simplifyPolygon(rings, tolerance, highQuality, intersectIndices);
       });
   }
   return geometry;
@@ -120,13 +130,14 @@ function simplifyGeom(geometry, tolerance, highQuality) {
  * @param {boolean} highQuality whether or not to spend more time to create a higher-quality
  * @returns {Array<Array<number>>} simplified coords
  */
-function simplifyLine(coordinates, tolerance, highQuality) {
+function simplifyLine(coordinates, tolerance, highQuality, intersectIndices) {
   return simplifyJS(
     coordinates.map(function (coord) {
       return { x: coord[0], y: coord[1], z: coord[2] };
     }),
     tolerance,
-    highQuality
+    highQuality,
+    intersectIndices
   ).map(function (coords) {
     return coords.z ? [coords.x, coords.y, coords.z] : [coords.x, coords.y];
   });
@@ -141,7 +152,12 @@ function simplifyLine(coordinates, tolerance, highQuality) {
  * @param {boolean} highQuality whether or not to spend more time to create a higher-quality
  * @returns {Array<Array<Array<number>>>} simplified coords
  */
-function simplifyPolygon(coordinates, tolerance, highQuality) {
+function simplifyPolygon(
+  coordinates,
+  tolerance,
+  highQuality,
+  intersectIndices
+) {
   return coordinates.map(function (ring) {
     var pts = ring.map(function (coord) {
       return { x: coord[0], y: coord[1] };
@@ -149,17 +165,23 @@ function simplifyPolygon(coordinates, tolerance, highQuality) {
     if (pts.length < 4) {
       throw new Error("invalid polygon");
     }
-    var simpleRing = simplifyJS(pts, tolerance, highQuality).map(function (
-      coords
-    ) {
+    var simpleRing = simplifyJS(
+      pts,
+      tolerance,
+      highQuality,
+      intersectIndices
+    ).map(function (coords) {
       return [coords.x, coords.y];
     });
     //remove 1 percent of tolerance until enough points to make a triangle
     while (!checkValidity(simpleRing)) {
       tolerance -= tolerance * 0.01;
-      simpleRing = simplifyJS(pts, tolerance, highQuality).map(function (
-        coords
-      ) {
+      simpleRing = simplifyJS(
+        pts,
+        tolerance,
+        highQuality,
+        intersectIndices
+      ).map(function (coords) {
         return [coords.x, coords.y];
       });
     }
