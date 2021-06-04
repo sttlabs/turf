@@ -1,9 +1,6 @@
 {
   "name": "@sttlabs/turf",
   "version": "6.3.1",
-  "workspaces": [
-    "packages/*"
-  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:sttlabs/turf.git"
