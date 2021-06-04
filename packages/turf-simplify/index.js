@@ -60,14 +60,17 @@ function simplify(geojson, options) {
 
   // Hack: Store the intersect indices of the original line with the simplified line
   // Then set it as a properties on the output simplified line for functionality need
-  const intersectIndices = [];
   geomEach(geojson, function (geom) {
-    simplifyGeom(geom, tolerance, highQuality, intersectIndices);
+    const intersectIndices = [];
+    const simplified = simplifyGeom(
+      geom,
+      tolerance,
+      highQuality,
+      intersectIndices
+    );
+    if (simplified.properties == null) simplified.properties = {};
+    simplified.properties.intersectIndices = intersectIndices;
   });
-  geojson.properties = {
-    ...geojson.properties,
-    intersectIndices,
-  };
 
   return geojson;
 }
