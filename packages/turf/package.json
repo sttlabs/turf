@@ -182,5 +182,6 @@
     "@turf/union": "^6.3.1",
     "@turf/unkink-polygon": "^6.3.1",
     "@turf/voronoi": "^6.3.1"
-  }
+  },
+  "gitHead": "a6a7685082e987e42a970290837d48b83f273bb4"
 }
