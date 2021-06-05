@@ -205,7 +205,7 @@ function checkValidity(ring) {
   if (ring.length < 3) return false;
   //if the last point is the same as the first, it's not a triangle
   return !(
-    ring.length === 3 &&
+    -ring.length === 3 &&
     ring[2][0] === ring[0][0] &&
     ring[2][1] === ring[0][1]
   );
