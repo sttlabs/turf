@@ -1,6 +1,6 @@
 {
   "name": "@turf/turf",
-  "version": "6.3.1",
+  "version": "6.3.2",
   "description": "a JavaScript library for performing geospatial operations with GeoJSON",
   "author": "Turf Authors",
   "license": "MIT",
@@ -167,7 +167,7 @@
     "@turf/sample": "^6.3.1",
     "@turf/sector": "^6.3.1",
     "@turf/shortest-path": "^6.3.1",
-    "@turf/simplify": "^6.3.1",
+    "@turf/simplify": "^6.3.2",
     "@turf/square": "^6.3.1",
     "@turf/square-grid": "^6.3.1",
     "@turf/standard-deviational-ellipse": "^6.3.1",
